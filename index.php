@@ -23,46 +23,66 @@ if ($method == "GET") {
 	//var_dump($empresas);
 	$respuesta = array();
 
-	$respuesta['error']= false;
-	$respuesta['mensaje']= "empresas listadas correctamente";
-	$respuesta['data']= $empresas;
+	$respuesta['error'] = false;
+	$respuesta['mensaje'] = "empresas listadas correctamente";
+	$respuesta['data'] = $empresas;
 
 
-	echoResponse(200,$respuesta);
+	echoResponse(200, $respuesta);
 }
 
 
 if ($method == "POST") {
 
-	//se recibe los encabezados enviados desde posmant
-	$headers = apache_request_headers();
+    // Se reciben los encabezados enviados desde Postman
+    $headers = apache_request_headers();
 
-	if ($headers["Token"] == SECRET_KEY ) {
+    if ($headers["Token"] == SECRET_KEY) {
+        if (empty($_POST)) {
+            $respuesta = array();
+            $respuesta['error'] = true;
+            $respuesta['mensaje'] = "Datos vacíos";
+            $respuesta['data'] = "-";
+            echoResponse(422, $respuesta);
+        } else {
+            // Definir los campos requeridos
+            $requiredFields = array('razon_social', 'ruc', 'correo', 'direccion', 'telefono');
 
-		$db = new DB_manejador();
-		$db->CrearEmpresa($_POST);
-	
-		$respuesta = array();
-		$respuesta['error']= false;
-		$respuesta['mensaje']= "empresas creada correctamente";
-		$respuesta['data']= $_POST;
-	
-		echoResponse(200,$respuesta);
-		// var_dump($_POST);
-	}
-	else {
-		$respuesta = array();
-		$respuesta['error']= true;
-		$respuesta['mensaje']= "Clave de acceso denegado";
-		$respuesta['data']= "";
-	
-		echoResponse(401,$respuesta);
-	}
+            // Verificar que todos los campos requeridos estén presentes
+            $missingFields = array();
+            foreach ($requiredFields as $field) {
+                if (empty($_POST[$field])) {
+                    $missingFields[] = $field;
+                }
+            }
 
+            if (!empty($missingFields)) {
+                $respuesta = array();
+                $respuesta['error'] = true;
+                $respuesta['mensaje'] = "Faltan los siguientes campos: " . implode(", ", $missingFields);
+                $respuesta['data'] = "-";
+                echoResponse(422, $respuesta);
+            } else {
+                $db = new DB_manejador();
+                $db->CrearEmpresa($_POST);
+                $respuesta = array();
+                $respuesta['error'] = false;
+                $respuesta['mensaje'] = "Empresa creada correctamente";
+                $respuesta['data'] = $_POST;
 
-	
+                echoResponse(200, $respuesta);
+            }
+        }
+
+    } else {
+        $respuesta = array();
+        $respuesta['error'] = true;
+        $respuesta['mensaje'] = "Clave de acceso denegada";
+        $respuesta['data'] = "";
+
+        echoResponse(401, $respuesta);
+    }
 }
-
 
 
 function echoResponse($code, $messagey)
