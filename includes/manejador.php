@@ -9,7 +9,7 @@ class DB_manejador
 
     function __construct()
     {
-        include_once("conectar.php");
+        include_once ("conectar.php");
         $db = new BDConnect;
         $this->conexion = $db->conectar();
     }
@@ -30,21 +30,35 @@ class DB_manejador
         return $resultados;
     }
 
-    public function BuscarEmpresa($id) {
-        
+    public function BuscarEmpresa($id)
+    {
+
     }
 
-    public function CrearEmpresa($dato) {
+    public function CrearEmpresa($datos)
+    {
+        $sql = "INSERT INTO empresas(razon_social, ruc, correo, direccion,telefono)
+        values(
+        '" . $datos['razon_social'] . "',
+        '" . $datos['ruc'] . "',
+        '" . $datos['correo'] . "',
+        '" . $datos['direccion'] . "',
+        '" . $datos['telefono'] . "'
         
+        )";
+        $reg = mysqli_query($this->conexion, $sql);
+        return TRUE;
     }
 
-    public function EditarEmpresa($id) {
-        
+    public function EditarEmpresa($id)
+    {
+
     }
 
-    
-    public function EliminarEmpresa($id) {
-        
+
+    public function EliminarEmpresa($id)
+    {
+
     }
 
 

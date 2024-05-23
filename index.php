@@ -33,6 +33,34 @@ if ($method == "GET") {
 
 
 if ($method == "POST") {
+
+	//se recibe los encabezados enviados desde posmant
+	$headers = apache_request_headers();
+
+	if ($headers["Token"] == SECRET_KEY ) {
+
+		$db = new DB_manejador();
+		$db->CrearEmpresa($_POST);
+	
+		$respuesta = array();
+		$respuesta['error']= false;
+		$respuesta['mensaje']= "empresas creada correctamente";
+		$respuesta['data']= $_POST;
+	
+		echoResponse(200,$respuesta);
+		// var_dump($_POST);
+	}
+	else {
+		$respuesta = array();
+		$respuesta['error']= true;
+		$respuesta['mensaje']= "Clave de acceso denegado";
+		$respuesta['data']= "";
+	
+		echoResponse(401,$respuesta);
+	}
+
+
+	
 }
 
 
