@@ -7,37 +7,30 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 header('Content-Type: text/html; charset=utf-8');
 header('P3P: CP="IDC DSP COR CURa ADMa OUR IND PHY ONL COM STA"');
 
-
 include_once "includes/config.php";
 include_once "includes/conectar.php";
 include_once "includes/manejador.php";
 
-
 $method = $_SERVER["REQUEST_METHOD"];
 
-// echo "se ha recibido el metodo get".$method;
+
 
 if ($method == "GET") {
-	$db = new DB_manejador();
-	$empresas = $db->ListarEmpresas();
-	//var_dump($empresas);
-	$respuesta = array();
+    $db = new DB_manejador();
+    $empresas = $db->ListarEmpresas();
+    $respuesta = array();
 
-	$respuesta['error'] = false;
-	$respuesta['mensaje'] = "empresas listadas correctamente";
-	$respuesta['data'] = $empresas;
+    $respuesta['error'] = false;
+    $respuesta['mensaje'] = "Empresas listadas correctamente";
+    $respuesta['data'] = $empresas;
 
-
-	echoResponse(200, $respuesta);
+    echoResponse(200, $respuesta);
 }
 
-
 if ($method == "POST") {
-
-    // Se reciben los encabezados enviados desde Postman
     $headers = apache_request_headers();
 
-    if ($headers["Token"] == SECRET_KEY) {
+    if ($headers["Token"] == SECRET_KEY  ) {
         if (empty($_POST)) {
             $respuesta = array();
             $respuesta['error'] = true;
@@ -45,10 +38,7 @@ if ($method == "POST") {
             $respuesta['data'] = "-";
             echoResponse(422, $respuesta);
         } else {
-            // Definir los campos requeridos
             $requiredFields = array('razon_social', 'ruc', 'correo', 'direccion', 'telefono');
-
-            // Verificar que todos los campos requeridos estén presentes
             $missingFields = array();
             foreach ($requiredFields as $field) {
                 if (empty($_POST[$field])) {
@@ -73,7 +63,6 @@ if ($method == "POST") {
                 echoResponse(200, $respuesta);
             }
         }
-
     } else {
         $respuesta = array();
         $respuesta['error'] = true;
@@ -84,21 +73,50 @@ if ($method == "POST") {
     }
 }
 
+if ($method == "DELETE") {
+    $headers = apache_request_headers();
 
-function echoResponse($code, $messagey)
-{
-	//clear the old headers
-	//header_remove();
-	// set the actual code
-	http_response_code($code);
-	// set the header to make sure cache is forced
-	header("Cache-Control: no-transform,public,max-age=300,s-maxage=900");
-	// treat this as json
-	header('Content-Type: application/json');
-	// ok, validation error, or failure
-	header('Status: ' . $code);
-	// return the encoded json
-	echo json_encode($messagey);
+	if (($headers["Token"] == SECRET_KEY) && ($headers["Delete-Token"] == SECRET_DELETE)) {
+        // Leer los datos enviados en el cuerpo de la solicitud
+        parse_str(file_get_contents("php://input"), $_DELETE);
+
+        if (!isset($_DELETE['id']) || empty($_DELETE['id'])) {
+            $respuesta = array();
+            $respuesta['error'] = true;
+            $respuesta['mensaje'] = "ID no proporcionado";
+            $respuesta['data'] = "-";
+            echoResponse(422, $respuesta);
+        } else {
+            $id = intval($_DELETE['id']);
+            $db = new DB_manejador();
+            $result = $db->EliminarEmpresa($id);
+
+            if ($result) {
+                $respuesta = array();
+                $respuesta['error'] = false;
+                $respuesta['mensaje'] = "Empresa eliminada correctamente";
+                $respuesta['data'] = $id;
+                echoResponse(200, $respuesta);
+            } else {
+                $respuesta = array();
+                $respuesta['error'] = true;
+                $respuesta['mensaje'] = "Error al eliminar la empresa";
+                $respuesta['data'] = $id;
+                echoResponse(500, $respuesta);
+            }
+        }
+    } else {
+        $respuesta = array();
+        $respuesta['error'] = true;
+        $respuesta['mensaje'] = "Clave de acceso denegada";
+        $respuesta['data'] = "";
+
+        echoResponse(401, $respuesta);
+    }
 }
 
-
+function echoResponse($code, $message) {
+    http_response_code($code);
+    header('Content-Type: application/json');
+    echo json_encode($message);
+}

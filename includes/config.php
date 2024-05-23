@@ -9,3 +9,4 @@ define("DB_PASS","");
 
 
 define("SECRET_KEY","123456a");
+define("SECRET_DELETE","123");

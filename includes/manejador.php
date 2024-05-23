@@ -56,11 +56,19 @@ class DB_manejador
     }
 
 
+   
+
     public function EliminarEmpresa($id)
     {
+        $sql = "DELETE FROM empresas WHERE id = '" . intval($id) . "'";
+        $reg = mysqli_query($this->conexion, $sql);
 
+        if ($reg) {
+            return true;
+        } else {
+            return false;
+        }
     }
-
 
 
 }
